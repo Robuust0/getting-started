@@ -1,7 +1,6 @@
 on: [push]
 
 name: GettingStarted_Container_Workflow
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -21,10 +20,14 @@ jobs:
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
 
-    - name: 'Build and Push Docker image'
-      run: |
-        docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.run_number }}
-        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.run_number }}
+    - name: 'Build Docker image'
+      run: docker build . -t getting-started
+
+    - name: 'Tag Docker image'
+      run: docker tag getting-started ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.run_number }}
+
+    - name: 'Push Docker image'
+      run: docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.run_number }}
 
     - name: 'Deploy to Azure Container Instances'
       uses: azure/aci-deploy@v1
