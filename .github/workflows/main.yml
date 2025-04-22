@@ -21,28 +21,15 @@ jobs:
        username: ${{ secrets.REGISTRY_USERNAME }}
        password: ${{ secrets.REGISTRY_PASSWORD }}
    - run: docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.run_number }} && docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.run_number }}
-   - name: 'Delete existing container (if exists)'
-     run: |
-      az container delete \
-      --resource-group ${{ secrets.RESOURCE_GROUP }} \
-      --name getting-started-github \
-      --yes || true
-   - name: 'Deploy to Azure Container Instances with persistent storage'
-     run: |
-      az container create \
-      --resource-group ${{ secrets.RESOURCE_GROUP }} \
-      --name getting-started-github \
-      --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.run_number }} \
-      --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
-      --registry-username ${{ secrets.REGISTRY_USERNAME }} \
-      --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
-      --dns-name-label ${{ secrets.RESOURCE_GROUP }} \
-      --location ${{ secrets.LOCATION }} \
-      --os-type Linux \
-      --ports 3000 \
-      --azure-file-volume-share-name ${{ secrets.SHARE_NAME }} \
-      --azure-file-volume-account-name ${{ secrets.STORAGE_ACCOUNT_NAME }} \
-      --azure-file-volume-account-key ${{ secrets.STORAGE_ACCOUNT_KEY }} \
-      --azure-file-volume-mount-path /etc/todos \
-      --cpu 1 \
-      --memory 1.5
+   - name: 'Deploy to Azure Container Instances'
+     uses: 'azure/aci-deploy@v1'
+     with:
+       resource-group: ${{ secrets.RESOURCE_GROUP }}
+       dns-name-label: ${{ secrets.RESOURCE_GROUP }}${{ github.run_number }}
+       image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REPOSITORY_NAME }}:${{ github.run_number }}
+       registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+       registry-username: ${{ secrets.REGISTRY_USERNAME }}
+       registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+       name: getting-started-github
+       location: 'west europe'
+       ports: '3000'
